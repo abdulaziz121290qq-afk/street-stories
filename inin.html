@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Street Stories — Street Food & Cultural Identity (Draft v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;0,9..144,900;1,9..144,500;1,9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16110e; --ink-2:#211a15; --ink-3:#2c231c;
+  --cream:#f6ecdb; --cream-dim:#cbbca4; --muted:#9b8c78;
+  --chili:#e4502f; --turmeric:#f2b134; --jade:#3e9f7a; --lantern:#ff7a3d;
+  --radius:18px; --max:1200px; --ease:cubic-bezier(.2,.75,.15,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden}
+body{background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.loading{overflow:hidden}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.serif{font-family:Fraunces,Georgia,serif}
+:focus-visible{outline:3px solid var(--turmeric);outline-offset:3px;border-radius:6px}
+::selection{background:var(--chili);color:#fff}
+
+/* grain overlay */
+body::after{content:"";position:fixed;inset:-50%;z-index:200;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain 1s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+
+/* LOADER */
+.loader{position:fixed;inset:0;z-index:300;display:grid;place-items:center;pointer-events:none}
+.loader .panel{position:absolute;left:0;right:0;height:50.5%;background:var(--ink-2);transition:transform 1s var(--ease)}
+.loader .panel.t{top:0}.loader .panel.b{bottom:0}
+.loader.done .panel.t{transform:translateY(-100%)}.loader.done .panel.b{transform:translateY(100%)}
+.loader .inner{position:relative;text-align:center;transition:opacity .4s}
+.loader.done .inner{opacity:0}
+.bowl{width:90px;height:90px;margin:0 auto 18px;position:relative}
+.bowl svg{width:100%;height:100%}
+.steam path{stroke:var(--cream-dim);stroke-width:3;fill:none;stroke-linecap:round;stroke-dasharray:40;animation:steam 1.6s ease-in-out infinite}
+.steam path:nth-child(2){animation-delay:.3s}.steam path:nth-child(3){animation-delay:.6s}
+@keyframes steam{0%{stroke-dashoffset:40;opacity:0}40%{opacity:1}100%{stroke-dashoffset:-40;opacity:0}}
+.loader .pct{font-family:Fraunces,serif;font-size:3.2rem;font-weight:800;line-height:1}
+.loader .msg{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+
+/* PROGRESS */
+.progress{position:fixed;top:0;left:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--chili),var(--turmeric));z-index:101}
+
+/* NAV */
+.nav{position:fixed;inset:0 0 auto 0;z-index:100;transition:background .3s, box-shadow .3s, transform .45s var(--ease)}
+.nav.scrolled{background:rgba(22,17,14,.82);backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(246,236,219,.08)}
+.nav.hide{transform:translateY(-100%)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo{display:flex;align-items:center;gap:10px;font-family:Fraunces,serif;font-weight:800;font-size:1.25rem;letter-spacing:-.01em}
+.logo-mark{width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--chili) 0 25%,var(--turmeric) 0 50%,var(--jade) 0 75%,var(--lantern) 0);display:grid;place-items:center;animation:spin 12s linear infinite}
+.logo:hover .logo-mark{animation-duration:1.5s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-mark::after{content:"";width:16px;height:16px;border-radius:50%;background:var(--ink)}
+.links{display:flex;gap:2px;align-items:center}
+.links>a,.dd>button{position:relative;font-size:.9rem;font-weight:500;color:var(--cream-dim);padding:8px 12px;border-radius:999px;transition:color .2s;background:none;border:0;cursor:pointer;font-family:inherit}
+.links>a::after,.dd>button::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;background:var(--turmeric);transform:scaleX(0);transform-origin:right;transition:transform .35s var(--ease)}
+.links>a:hover,.dd>button:hover,.links>a.active{color:var(--cream)}
+.links>a:hover::after,.dd>button:hover::after,.links>a.active::after{transform:scaleX(1);transform-origin:left}
+.dd{position:relative}
+.dd-menu{position:absolute;top:calc(100% + 10px);left:50%;transform:translate(-50%,10px) scale(.97);background:var(--ink-2);border:1px solid rgba(246,236,219,.1);border-radius:16px;padding:8px;min-width:250px;opacity:0;pointer-events:none;transition:.3s var(--ease);box-shadow:0 24px 50px rgba(0,0,0,.45)}
+.dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1)}
+.dd-menu a{display:flex;gap:10px;padding:9px 12px;border-radius:10px;color:var(--cream-dim);font-size:.88rem;transition:.2s}
+.dd-menu a span{color:var(--turmeric);font-weight:700;width:22px}
+.dd-menu a:hover{background:rgba(246,236,219,.07);color:var(--cream);padding-left:18px}
+.cta{background:var(--chili)!important;color:#fff!important;font-weight:600!important;margin-left:8px}
+.cta::after{display:none}
+.burger{display:none;width:46px;height:46px;border:0;background:rgba(246,236,219,.08);border-radius:12px;cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:5px}
+.burger i{width:20px;height:2px;background:var(--cream);transition:.35s var(--ease)}
+.burger.open i:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.open i:nth-child(2){opacity:0;transform:scaleX(0)}
+.burger.open i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile{position:fixed;inset:0;background:var(--ink);z-index:99;padding:100px 28px 30px;display:flex;flex-direction:column;clip-path:circle(0 at calc(100% - 47px) 36px);transition:clip-path .7s var(--ease);visibility:hidden}
+.mobile.open{clip-path:circle(150% at calc(100% - 47px) 36px);visibility:visible}
+.mobile a{font-family:Fraunces,serif;font-size:2rem;font-weight:600;padding:10px 0;border-bottom:1px solid rgba(246,236,219,.08);opacity:0;transform:translateY(20px);transition:.5s var(--ease)}
+.mobile.open a{opacity:1;transform:none}
+.mobile a small{font-family:Inter;font-size:.75rem;color:var(--chili);margin-right:12px;vertical-align:middle}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:flex-end;padding:140px 0 100px;isolation:isolate;overflow:hidden}
+.hero-bg{position:absolute;inset:-6%;z-index:-3;background:url(https://images.unsplash.com/photo-1542666836-03522463be07?w=1800&q=70&auto=format&fit=crop) center/cover;will-change:transform}
+.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(22,17,14,.55) 0%,rgba(22,17,14,.3) 35%,rgba(22,17,14,.92) 82%,var(--ink) 100%),linear-gradient(90deg,rgba(22,17,14,.8) 0%,rgba(22,17,14,.15) 70%)}
+#embers{position:absolute;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none}
+.lanterns{position:absolute;top:0;right:6%;display:flex;gap:46px;z-index:-1;pointer-events:none}
+.lan{transform-origin:50% 0;animation:swing 4s ease-in-out infinite}
+.lan:nth-child(2){animation-duration:5.2s;animation-delay:-1s}
+.lan:nth-child(3){animation-duration:4.6s;animation-delay:-2s}
+@keyframes swing{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+.lan .glow{animation:flicker 3s infinite}
+@keyframes flicker{0%,100%{opacity:.9}45%{opacity:.75}50%{opacity:1}55%{opacity:.8}}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--turmeric);margin-bottom:22px}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--turmeric);transform-origin:left;transform:scaleX(0);transition:transform .8s .9s var(--ease)}
+.ready .eyebrow::before{transform:scaleX(1)}
+.hero h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(2.6rem,7.4vw,6.4rem);line-height:.98;letter-spacing:-.03em;max-width:13ch}
+.hero h1 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+.hero h1 .w>span{display:inline-block;transform:translateY(110%) rotate(6deg);transition:transform 1.1s var(--ease)}
+.ready .hero h1 .w>span{transform:none}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--turmeric)}
+.glob{font-style:italic;font-weight:700;background:linear-gradient(90deg,var(--chili),var(--lantern),var(--turmeric),var(--chili));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.fade{opacity:0;transform:translateY(24px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.ready .fade{opacity:1;transform:none}
+.hero p.lead{font-size:clamp(1rem,1.6vw,1.2rem);color:var(--cream-dim);max-width:56ch;margin:26px 0 34px}
+.taste{display:block;min-height:1.6em;white-space:nowrap}
+.typed{color:var(--cream);font-weight:600;border-right:2px solid var(--turmeric);padding-right:3px;animation:caret .8s step-end infinite}
+@keyframes caret{50%{border-color:transparent}}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:999px;font-weight:600;font-size:.95rem;cursor:pointer;border:0;font-family:inherit;overflow:hidden;transition:background .3s,box-shadow .3s;will-change:transform}
+.btn>*{position:relative;z-index:1;pointer-events:none}
+.btn-primary{background:var(--chili);color:#fff;box-shadow:0 10px 30px rgba(228,80,47,.35)}
+.btn-primary::before{content:"";position:absolute;inset:0;background:var(--turmeric);transform:translateY(101%);border-radius:inherit;transition:transform .45s var(--ease)}
+.btn-primary:hover::before{transform:none}
+.btn-primary:hover{color:var(--ink)}
+.btn-ghost{background:rgba(246,236,219,.08);color:var(--cream);border:1px solid rgba(246,236,219,.2);backdrop-filter:blur(6px)}
+.btn-ghost:hover{background:rgba(246,236,219,.16)}
+.btn .arr{transition:transform .3s var(--ease)}.btn:hover .arr{transform:translateX(5px)}
+.hero-meta{display:flex;gap:44px;margin-top:56px;flex-wrap:wrap}
+.hero-meta b{display:block;font-family:Fraunces,serif;font-size:2.2rem;font-weight:600;color:var(--cream);line-height:1.1}
+.hero-meta span{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.scroll-ind{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.mouse{width:22px;height:34px;border:2px solid var(--cream-dim);border-radius:12px;position:relative}
+.mouse::after{content:"";position:absolute;left:50%;top:6px;width:3px;height:7px;margin-left:-1.5px;background:var(--turmeric);border-radius:2px;animation:wheel 1.8s infinite}
+@keyframes wheel{0%{opacity:0;transform:translateY(-3px)}30%{opacity:1}100%{opacity:0;transform:translateY(10px)}}
+
+/* MARQUEE */
+.marquee{border-block:1px solid rgba(246,236,219,.1);background:var(--ink-2);overflow:hidden;padding:16px 0}
+.marquee.alt{background:var(--chili);border:0;transform:rotate(-1.5deg) scale(1.03);margin-top:-6px;box-shadow:0 20px 40px rgba(0,0,0,.35);position:relative;z-index:2}
+.track{display:flex;gap:48px;width:max-content;will-change:transform}
+.track span{font-family:Fraunces,serif;font-size:1.6rem;white-space:nowrap;color:var(--cream-dim);display:flex;align-items:center;gap:14px}
+.marquee.alt .track span{color:#fff;font-weight:700;font-style:italic;font-size:1.35rem}
+.track span small{font-family:Inter;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-style:normal;font-weight:500}
+.marquee.alt .track span small{color:rgba(255,255,255,.7)}
+.track span::after{content:"✦";color:var(--chili);font-size:.9rem;margin-left:34px}
+.marquee.alt .track span::after{color:var(--turmeric)}
+
+/* SECTIONS */
+section.sec{padding:130px 0;position:relative}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:60px;flex-wrap:wrap}
+.kicker{display:inline-flex;align-items:center;gap:10px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--chili);margin-bottom:14px}
+.kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--chili);animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+h2{font-family:Fraunces,serif;font-weight:700;font-size:clamp(2rem,4.6vw,3.6rem);line-height:1.04;letter-spacing:-.02em;max-width:18ch}
+h2 em{font-weight:500;color:var(--turmeric)}
+h2 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.1em;margin-bottom:-.1em}
+h2 .w>span{display:inline-block;transform:translateY(105%);transition:transform .9s var(--ease)}
+.in h2 .w>span,h2.in .w>span{transform:none}
+.sec-head p{max-width:44ch;color:var(--cream-dim)}
+
+/* THEMES */
+.themes{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;perspective:1000px}
+.theme{--mx:50%;--my:50%;background:var(--ink-2);border:1px solid rgba(246,236,219,.07);border-radius:var(--radius);padding:32px 26px;position:relative;overflow:hidden;transform-style:preserve-3d;transition:border-color .3s, transform .2s ease-out}
+.theme::before{content:"";position:absolute;inset:0;background:radial-gradient(380px circle at var(--mx) var(--my),rgba(242,177,52,.16),transparent 45%);opacity:0;transition:opacity .3s}
+.theme:hover::before{opacity:1}
+.theme:hover{border-color:rgba(242,177,52,.35)}
+.theme .ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:1.6rem;margin-bottom:24px;transform:translateZ(40px);transition:transform .4s var(--ease)}
+.theme:hover .ico{transform:translateZ(40px) rotate(-10deg) scale(1.12)}
+.theme h3{font-family:Fraunces,serif;font-size:1.4rem;margin-bottom:10px;transform:translateZ(25px)}
+.theme p{color:var(--cream-dim);font-size:.93rem;transform:translateZ(12px)}
+.theme .num{position:absolute;right:18px;top:12px;font-family:Fraunces,serif;font-size:4rem;font-weight:900;color:transparent;-webkit-text-stroke:1px rgba(246,236,219,.08)}
+
+/* STATEMENT (scroll-lit words) */
+.statement{padding:60px 0 140px}
+.statement p{font-family:Fraunces,serif;font-weight:600;font-size:clamp(1.8rem,4.4vw,3.6rem);line-height:1.18;letter-spacing:-.015em;max-width:24ch}
+.statement .sw{color:rgba(246,236,219,.13);transition:color .35s}
+.statement .sw.lit{color:var(--cream)}
+.statement .sw.hl.lit{color:var(--turmeric);font-style:italic}
+
+/* ATLAS */
+.atlas{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;perspective:1200px}
+.country{--mx:50%;--my:50%;position:relative;border-radius:22px;overflow:hidden;aspect-ratio:3/4.3;cursor:pointer;isolation:isolate;display:flex;flex-direction:column;justify-content:flex-end;padding:24px;transform-style:preserve-3d;transition:transform .25s ease-out,clip-path 1.2s var(--ease);clip-path:inset(100% 0 0 0 round 22px)}
+.country.in{clip-path:inset(0 0 0 0 round 22px)}
+.country img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transform:scale(1.3);transition:transform 1.6s var(--ease)}
+.country.in img{transform:scale(1.02)}
+.country.in:hover img{transform:scale(1.12)}
+.country::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent 30%,rgba(22,17,14,.96) 100%)}
+.country::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.22),transparent 45%);opacity:0;transition:opacity .3s;pointer-events:none}
+.country:hover::after{opacity:1}
+.country .flag{position:absolute;top:18px;left:18px;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:rgba(22,17,14,.6);backdrop-filter:blur(8px);border:1px solid rgba(246,236,219,.15)}
+.country .idx{position:absolute;top:14px;right:18px;font-family:Fraunces,serif;font-size:1rem;color:var(--cream-dim)}
+.country .native{font-size:.85rem;color:var(--turmeric);font-weight:600;margin-bottom:4px;transform:translateZ(30px)}
+.country h3{font-family:Fraunces,serif;font-size:2.1rem;line-height:1;margin-bottom:10px;transform:translateZ(50px)}
+.country .dishes{font-size:.86rem;color:var(--cream-dim);max-height:0;opacity:0;overflow:hidden;transition:.5s var(--ease)}
+.country:hover .dishes,.country:focus-visible .dishes{max-height:90px;opacity:1}
+.country .go{margin-top:14px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:8px;transform:translateZ(30px)}
+.country .go i{width:32px;height:32px;border-radius:50%;background:var(--chili);display:grid;place-items:center;font-style:normal;transition:.4s var(--ease)}
+.country:hover .go i{transform:rotate(-45deg);background:var(--turmeric);color:var(--ink)}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1.05fr 1fr;gap:70px;align-items:center}
+.split-img{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/5;clip-path:inset(0 0 100% 0 round 24px);transition:clip-path 1.4s var(--ease)}
+.split-img.in{clip-path:inset(0 0 0 0 round 24px)}
+.split-img img{width:100%;height:120%;object-fit:cover;will-change:transform}
+.split-img .tag{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(22,17,14,.78);backdrop-filter:blur(10px);border-radius:16px;padding:18px 20px;font-family:Fraunces,serif;font-style:italic;font-size:1.1rem;border:1px solid rgba(246,236,219,.12);transform:translateY(30px);opacity:0;transition:1s .8s var(--ease)}
+.split-img.in .tag{transform:none;opacity:1}
+.split-img .tag small{display:block;font-family:Inter;font-style:normal;font-size:.75rem;color:var(--muted);margin-top:6px}
+.split p{color:var(--cream-dim);margin-top:20px}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.pill{font-size:.8rem;padding:7px 14px;border-radius:999px;border:1px solid rgba(246,236,219,.18);color:var(--cream-dim);transition:.3s;opacity:0;transform:scale(.8)}
+.in .pill{opacity:1;transform:none}
+.pill:hover{background:var(--turmeric);color:var(--ink);border-color:var(--turmeric);transform:translateY(-3px)}
+
+/* RESEARCH PATH */
+.path-wrap{position:relative}
+.path-line{position:absolute;left:0;right:0;top:44px;height:2px;background:rgba(246,236,219,.08);border-radius:2px;overflow:hidden}
+.path-line i{position:absolute;inset:0;background:linear-gradient(90deg,var(--chili),var(--turmeric),var(--jade));transform-origin:left;transform:scaleX(0)}
+.path{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;position:relative}
+.step{background:var(--ink-2);border-radius:16px;padding:22px 18px 24px;border:1px solid rgba(246,236,219,.07);transition:background .3s,border-color .3s,transform .4s var(--ease),opacity .6s;position:relative;min-height:220px;display:flex;flex-direction:column;opacity:.25;transform:translateY(30px)}
+.step.on{opacity:1;transform:none}
+.step.on:hover{background:var(--ink-3);border-color:var(--chili);transform:translateY(-6px)}
+.step .dot{position:absolute;top:-7px;left:20px;width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid rgba(246,236,219,.2);transition:.4s}
+.step.on .dot{background:var(--turmeric);border-color:var(--turmeric);box-shadow:0 0 0 6px rgba(242,177,52,.18)}
+.step .n{font-family:Fraunces,serif;font-size:2.6rem;font-weight:800;color:transparent;-webkit-text-stroke:1px var(--turmeric);line-height:1;transition:.3s}
+.step:hover .n{color:var(--turmeric)}
+.step h4{font-family:Fraunces,serif;font-size:1.05rem;margin:16px 0 8px;line-height:1.2}
+.step p{font-size:.8rem;color:var(--muted);flex:1}
+.step .by{font-size:.72rem;color:var(--jade);font-weight:600;margin-top:12px}
+
+/* TEAM + VIDEO */
+.tv{display:grid;grid-template-columns:1fr 1.1fr;gap:24px}
+.card{background:var(--ink-2);border-radius:24px;padding:36px;border:1px solid rgba(246,236,219,.07);position:relative;overflow:hidden}
+.avatars{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin:28px 0}
+.av{aspect-ratio:1;border-radius:50%;background:var(--ink-3);border:1.5px dashed rgba(246,236,219,.22);display:grid;place-items:center;font-family:Fraunces,serif;font-weight:600;color:var(--cream-dim);font-size:1rem;transition:transform .5s var(--ease),border-color .3s,color .3s,background .3s;position:relative;transform:scale(0) rotate(-90deg)}
+.in .av{transform:none}
+.av:hover{border-color:var(--turmeric);color:var(--ink);background:var(--turmeric);transform:scale(1.15)!important;z-index:2}
+.av::after{content:attr(data-name);position:absolute;bottom:calc(100% + 8px);left:50%;white-space:nowrap;background:var(--cream);color:var(--ink);font-family:Inter;font-size:.72rem;padding:5px 10px;border-radius:7px;font-weight:600;opacity:0;transform:translate(-50%,6px);transition:.25s;pointer-events:none}
+.av:hover::after{opacity:1;transform:translate(-50%,0)}
+.video{aspect-ratio:16/9;border-radius:18px;border:1.5px dashed rgba(246,236,219,.22);display:grid;place-items:center;text-align:center;margin-top:24px;position:relative;overflow:hidden;cursor:pointer}
+.video .vbg{position:absolute;inset:0;background:url(https://images.unsplash.com/photo-1763703396043-cc821fcc4bc2?w=1100&q=70&auto=format&fit=crop) center/cover;transition:transform 1.2s var(--ease)}
+.video:hover .vbg{transform:scale(1.08)}
+.video::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(228,80,47,.25),rgba(22,17,14,.82) 65%);z-index:1}
+.video > div:last-child{position:relative;z-index:2}
+.play{width:80px;height:80px;border-radius:50%;background:var(--chili);display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 0 0 12px rgba(228,80,47,.2);animation:pulse 2.4s infinite;transition:transform .4s var(--ease)}
+.video:hover .play{transform:scale(1.12)}
+@keyframes pulse{50%{box-shadow:0 0 0 24px rgba(228,80,47,0)}}
+.play::after{content:"";border-left:22px solid #fff;border-block:14px solid transparent;margin-left:6px}
+.video small{color:var(--muted);font-size:.82rem}
+
+/* BIG FOOTER */
+footer{border-top:1px solid rgba(246,236,219,.08);padding:70px 0 30px;margin-top:40px;overflow:hidden}
+.foot{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+.foot h5{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.foot a{display:block;color:var(--cream-dim);font-size:.9rem;padding:3px 0;transition:.25s}
+.foot a:hover{color:var(--turmeric);transform:translateX(5px)}
+.foot p{color:var(--muted);font-size:.88rem;max-width:36ch;margin-top:12px}
+.mega{font-family:Fraunces,serif;font-weight:900;font-size:clamp(3.4rem,15vw,13rem);line-height:.9;letter-spacing:-.04em;margin-top:60px;white-space:nowrap;color:transparent;-webkit-text-stroke:1.5px rgba(246,236,219,.18);position:relative;user-select:none}
+.mega span{position:absolute;inset:0;color:var(--chili);-webkit-text-stroke:0;clip-path:inset(0 100% 0 0);transition:clip-path 1.2s var(--ease)}
+.mega:hover span{clip-path:inset(0 0 0 0)}
+.copy{margin-top:30px;font-size:.78rem;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* REVEAL + TOAST */
+.rv{opacity:0;transform:translateY(40px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,120px);background:var(--cream);color:var(--ink);padding:13px 22px;border-radius:999px;font-size:.88rem;font-weight:600;z-index:150;transition:.45s var(--ease);opacity:0;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.draft-badge{position:fixed;bottom:18px;right:18px;z-index:90;background:var(--turmeric);color:var(--ink);font-size:.7rem;font-weight:700;letter-spacing:.1em;padding:6px 12px;border-radius:999px;text-transform:uppercase}
+.totop{position:fixed;bottom:18px;left:18px;z-index:90;width:48px;height:48px;border-radius:50%;border:0;background:var(--ink-3);color:var(--cream);cursor:pointer;display:grid;place-items:center;opacity:0;transform:translateY(20px);transition:.4s var(--ease)}
+.totop.show{opacity:1;transform:none}
+.totop svg{position:absolute;inset:0}
+.totop circle{fill:none;stroke:var(--turmeric);stroke-width:2.5;stroke-dasharray:138;stroke-dashoffset:138;transform:rotate(-90deg);transform-origin:center}
+
+@media (max-width:1050px){
+  .links{display:none}.burger{display:flex}
+  .themes,.atlas{grid-template-columns:repeat(2,1fr)}
+  .path{grid-template-columns:repeat(2,1fr)}.path-line{display:none}
+  .split,.tv{grid-template-columns:1fr;gap:40px}
+  .foot{grid-template-columns:1fr 1fr}
+  .lanterns{right:2%;gap:24px;transform:scale(.7);transform-origin:top right}
+}
+@media (max-width:560px){
+  section.sec{padding:84px 0}
+  .themes{grid-template-columns:1fr}
+  .atlas{grid-template-columns:1fr 1fr;gap:10px}.country{padding:16px}.country h3{font-size:1.4rem}
+  .avatars{grid-template-columns:repeat(5,1fr)}
+  .card{padding:24px}
+  .hero-meta{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px}
+  .scroll-ind{display:none}
+  .lanterns .lan:nth-child(3){display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv,.fade,.step,.pill{opacity:1!important;transform:none!important}.hero h1 .w>span,h2 .w>span{transform:none!important}.country,.split-img{clip-path:none!important}.av{transform:none!important}}
+
+/* ===== V3 ADDITIONS ===== */
+/* rotating badge */
+.badge-rot{position:absolute;right:8%;bottom:16%;width:150px;height:150px;z-index:1;pointer-events:none}
+.badge-rot svg{width:100%;height:100%;animation:spin 18s linear infinite}
+.badge-rot text{font:700 10.5px Inter,sans-serif;letter-spacing:3.2px;fill:var(--cream);text-transform:uppercase}
+.badge-rot .center{position:absolute;inset:0;display:grid;place-items:center;font-size:2.4rem}
+
+/* stickers (talking food characters) */
+.stk{position:relative;display:inline-block;filter:drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 14px 18px rgba(0,0,0,.45));transition:transform .4s var(--ease);touch-action:none;user-select:none;-webkit-user-select:none}
+.stk svg{display:block;width:100%;height:auto;overflow:visible}
+.stk:hover{transform:rotate(-6deg) scale(1.06)}
+.stk.talking svg{animation:bob .35s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-3px) rotate(1.5deg)}}
+.stk .eyes{transform-box:fill-box;transform-origin:center;animation:blinkeye 4.5s infinite}
+.stk:nth-of-type(2) .eyes{animation-delay:-1.7s}
+@keyframes blinkeye{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.bubble{position:absolute;bottom:calc(100% + 14px);left:50%;transform:translate(-50%,10px) scale(.85);background:#fff;color:var(--ink);font-weight:700;font-size:.92rem;line-height:1.35;padding:10px 16px;border-radius:18px;white-space:nowrap;opacity:0;transition:.35s var(--ease);pointer-events:none;box-shadow:0 10px 24px rgba(0,0,0,.3);z-index:5}
+.bubble.wide{white-space:normal;width:250px;font-weight:600;font-size:.85rem;text-align:left}
+.bubble::after{content:"";position:absolute;top:100%;left:50%;margin-left:-8px;border:8px solid transparent;border-top-color:#fff}
+.bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.bubble .nat{display:block;font-family:Fraunces,serif;font-size:1.15rem;color:var(--chili)}
+.hero-stk{position:absolute;z-index:2;cursor:grab}
+.hero-stk:active{cursor:grabbing}
+.hero-stk.s1{right:20%;bottom:22%;width:150px;transform:rotate(-8deg)}
+.hero-stk.s2{right:5%;bottom:42%;width:170px;transform:rotate(7deg)}
+.hero-stk.drag{transition:none;transform:none}
+.drag-hint{position:absolute;right:6%;bottom:12%;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);z-index:2;display:flex;gap:8px;align-items:center}
+.drag-hint::before{content:"☝";font-size:1rem;animation:nudge 1.6s infinite}
+@keyframes nudge{50%{transform:translateX(-6px)}}
+
+/* crew section */
+.crew{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:90px;row-gap:90px}
+.crew-item{background:var(--ink-2);border:1px solid rgba(246,236,219,.07);border-radius:24px;padding:80px 22px 26px;text-align:center;position:relative;cursor:pointer;transition:border-color .3s,background .3s}
+.crew-item:hover{border-color:rgba(242,177,52,.4);background:var(--ink-3)}
+.crew-item .stk{width:140px;margin:0 auto}
+.crew-item h3{font-family:Fraunces,serif;font-size:1.3rem;margin-top:18px}
+.crew-item .lang{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.crew-item .acts{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.chip{white-space:nowrap;font:600 .78rem Inter,sans-serif;padding:8px 13px;border-radius:999px;border:1px solid rgba(246,236,219,.18);background:none;color:var(--cream);cursor:pointer;transition:.25s}
+.chip:hover{background:var(--turmeric);color:var(--ink);border-color:var(--turmeric)}
+.crew-item .bubble{bottom:auto;top:-16px;transform:translate(-50%,-100%) scale(.85)}
+.crew-item .bubble.show{transform:translate(-50%,-100%) scale(1)}
+
+/* route map */
+.route{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:stretch}
+.map{position:relative;background:var(--ink-2);border-radius:24px;border:1px solid rgba(246,236,219,.07);overflow:hidden}
+.map svg{width:100%;height:auto;display:block}
+.map .grid-dot{fill:rgba(246,236,219,.14)}
+.map .rpath-bg{fill:none;stroke:rgba(246,236,219,.1);stroke-width:3;stroke-dasharray:2 10;stroke-linecap:round}
+.map .rpath{fill:none;stroke:url(#rg);stroke-width:4;stroke-linecap:round}
+.map .city{cursor:pointer}
+.map .city .ring{fill:none;stroke:var(--turmeric);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:ping 2.2s infinite}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.4);opacity:0}}
+.map .city .pin{fill:var(--chili);stroke:#fff;stroke-width:3;transition:.3s}
+.map .city.act .pin{fill:var(--turmeric)}
+.map .city text{font:700 19px Inter,sans-serif;fill:var(--cream);letter-spacing:.06em}
+.map .city:hover .pin{transform:scale(1.25);transform-box:fill-box;transform-origin:center}
+.map .region{font:italic 600 22px Fraunces,serif;fill:rgba(246,236,219,.1);letter-spacing:.3em}
+.map .cart{font-size:40px}
+.city-card{background:var(--ink-2);border-radius:24px;border:1px solid rgba(246,236,219,.07);padding:34px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.city-card .cc-in{transition:opacity .35s,transform .35s var(--ease)}
+.city-card .cc-in.swap{opacity:0;transform:translateY(14px)}
+.city-card .stamp{width:84px;height:84px;border-radius:50%;border:2px dashed var(--chili);display:grid;place-items:center;font-size:2.2rem;transform:rotate(-12deg);margin-bottom:22px}
+.city-card h3{font-family:Fraunces,serif;font-size:2rem;line-height:1.1}
+.city-card .where{color:var(--turmeric);font-size:.82rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin:6px 0 16px}
+.city-card p{color:var(--cream-dim);font-size:.95rem}
+.city-card .dl{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.city-card .nav-c{display:flex;gap:8px;margin-top:auto;padding-top:26px}
+
+/* before / after */
+.ba{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:16/8;--pos:50%;user-select:none;cursor:ew-resize}
+.ba img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ba .top{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.ba .handle{position:absolute;top:0;bottom:0;left:var(--pos);width:3px;margin-left:-1.5px;background:#fff;pointer-events:none}
+.ba .knob{position:absolute;top:50%;left:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:#fff;color:var(--ink);display:grid;place-items:center;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ba .lbl{position:absolute;top:20px;padding:8px 14px;border-radius:999px;background:rgba(22,17,14,.72);backdrop-filter:blur(8px);font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
+.ba .lbl.l{left:20px;color:var(--turmeric)}.ba .lbl.r{right:20px;color:var(--cream)}
+.ba input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.ba-cap{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.ba-cap div{background:var(--ink-2);border-radius:18px;padding:22px;border:1px solid rgba(246,236,219,.07)}
+.ba-cap b{font-family:Fraunces,serif;font-size:1.15rem;display:block;margin-bottom:6px}
+.ba-cap p{color:var(--cream-dim);font-size:.9rem}
+
+/* flip cards */
+.flips{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;perspective:1400px}
+.flip{position:relative;aspect-ratio:3/3.6;cursor:pointer;transform-style:preserve-3d;transition:transform .8s var(--ease);border:0;background:none;color:inherit;font:inherit;text-align:left}
+.flip.on{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;border-radius:22px;padding:26px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column}
+.flip .f{background:var(--ink-2);border:1px solid rgba(246,236,219,.08)}
+.flip .f .big{font-size:3.4rem;margin-bottom:auto;display:inline-block;animation:floaty 3s ease-in-out infinite}
+.flip:nth-child(2) .f .big{animation-delay:-.8s}.flip:nth-child(3) .f .big{animation-delay:-1.6s}.flip:nth-child(4) .f .big{animation-delay:-2.2s}
+@keyframes floaty{50%{transform:translateY(-8px) rotate(-4deg)}}
+.flip .f h4{font-family:Fraunces,serif;font-size:1.25rem;line-height:1.25}
+.flip .f small{color:var(--muted);font-size:.75rem;margin-top:12px;letter-spacing:.1em;text-transform:uppercase}
+.flip .b{transform:rotateY(180deg);background:linear-gradient(150deg,var(--chili),#b8361c);color:#fff}
+.flip .b .ans{font-family:Fraunces,serif;font-size:2.2rem;font-weight:800;line-height:1}
+.flip .b p{margin-top:14px;font-size:.92rem;line-height:1.5;color:rgba(255,255,255,.92)}
+
+@media (max-width:1050px){
+  .crew,.flips{grid-template-columns:repeat(2,1fr)}
+  .route{grid-template-columns:1fr}
+  .badge-rot{display:none}
+  .hero-stk.s1{right:6%;bottom:7%;width:96px}.hero-stk.s2{display:none}.drag-hint{display:none}
+}
+@media (max-width:560px){
+  .crew{gap:12px}.crew-item{padding:70px 12px 18px}.crew-item .stk{width:100px}.crew-item .acts{flex-direction:column}
+  .bubble.wide{width:200px}
+  .ba{aspect-ratio:4/5}.ba-cap{grid-template-columns:1fr}
+  .flips{grid-template-columns:1fr 1fr;gap:10px}.flip{aspect-ratio:3/4.2}.flip .f,.flip .b{padding:16px}.flip .f h4{font-size:1rem}.flip .b .ans{font-size:1.5rem}.flip .b p{font-size:.78rem}
+  .hero-stk.s1{display:none}
+}
+
+</style>
+</head>
+<body class="loading">
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="panel t"></div><div class="panel b"></div>
+  <div class="inner">
+    <div class="bowl"><svg viewBox="0 0 90 90"><g class="steam"><path d="M30 34c-6-8 6-12 0-22"/><path d="M45 34c-6-8 6-12 0-22"/><path d="M60 34c-6-8 6-12 0-22"/></g><path d="M12 44h66c0 18-14 32-33 32S12 62 12 44z" fill="#e4502f"/><path d="M12 44h66" stroke="#f2b134" stroke-width="4" stroke-linecap="round"/></svg></div>
+    <div class="pct"><span id="pct">0</span>%</div>
+    <div class="msg">Firing up the grill…</div>
+  </div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="draft-badge">Draft</div>
+<button class="totop" id="totop" aria-label="Back to top"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22"/></svg>↑</button>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="Street Stories home"><span class="logo-mark" aria-hidden="true"></span>Street Stories</a>
+    <nav class="links" aria-label="Main">
+      <a href="#top" class="active">Home</a>
+      <a href="#about">About</a>
+      <a href="#atlas">Atlas</a>
+      <a href="#route">Route</a>
+      <div class="dd">
+        <button aria-haspopup="true">Research ▾</button>
+        <div class="dd-menu">
+          <a href="#research" data-soon><span>01</span>Topic Introduction</a>
+          <a href="#research" data-soon><span>02</span>Historical Development</a>
+          <a href="#research" data-soon><span>03</span>Society & Power</a>
+          <a href="#research" data-soon><span>04</span>Global Reception</a>
+          <a href="#research" data-soon><span>05</span>Research Gap</a>
+          <a href="#research" data-soon><span>06</span>Our Perspective</a>
+          <a href="#research" data-soon><span>07</span>Public Engagement</a>
+        </div>
+      </div>
+      <a href="#team">Team</a>
+      <a href="#team" data-soon>Reflections</a>
+      <a href="#video">Video</a>
+      <a href="#footer" data-soon>References</a>
+      <a href="#about" class="cta mag">Explore</a>
+    </nav>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><i></i><i></i><i></i></button>
+  </div>
+</header>
+<nav class="mobile" id="mobile" aria-label="Mobile">
+  <a href="#top"><small>01</small>Home</a><a href="#about"><small>02</small>About</a><a href="#crew"><small>03</small>Street Crew</a><a href="#atlas"><small>04</small>Street Food Atlas</a><a href="#route"><small>05</small>Food Route</a><a href="#research"><small>06</small>Research</a><a href="#team"><small>07</small>Team</a><a href="#video"><small>08</small>Video</a>
+</nav>
+
+<main id="top">
+<section class="hero" id="hero">
+  <div class="hero-bg" id="heroBg" role="img" aria-label="A street food cook preparing dishes under red lanterns at a night market"></div>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="lanterns" aria-hidden="true">
+    <svg class="lan" width="54" height="170" viewBox="0 0 54 170"><line x1="27" y1="0" x2="27" y2="70" stroke="#6b5a48" stroke-width="2"/><ellipse class="glow" cx="27" cy="112" rx="40" ry="44" fill="rgba(255,90,40,.18)"/><rect x="17" y="68" width="20" height="8" rx="2" fill="#3a2a1c"/><ellipse cx="27" cy="110" rx="24" ry="34" fill="#d63b22"/><path d="M27 76v68M15 82c-6 18-6 38 0 56M39 82c6 18 6 38 0 56" stroke="#a52a16" stroke-width="1.5" fill="none"/><rect x="17" y="142" width="20" height="7" rx="2" fill="#3a2a1c"/><path d="M27 149v18" stroke="#f2b134" stroke-width="3"/></svg>
+    <svg class="lan" width="54" height="120" viewBox="0 0 54 120"><line x1="27" y1="0" x2="27" y2="22" stroke="#6b5a48" stroke-width="2"/><ellipse class="glow" cx="27" cy="62" rx="40" ry="44" fill="rgba(255,150,40,.16)"/><rect x="17" y="20" width="20" height="8" rx="2" fill="#3a2a1c"/><ellipse cx="27" cy="60" rx="22" ry="30" fill="#ec8a23"/><path d="M27 30v60M16 36c-5 15-5 33 0 48M38 36c5 15 5 33 0 48" stroke="#b9661a" stroke-width="1.5" fill="none"/><rect x="17" y="88" width="20" height="7" rx="2" fill="#3a2a1c"/><path d="M27 95v18" stroke="#e4502f" stroke-width="3"/></svg>
+    <svg class="lan" width="54" height="210" viewBox="0 0 54 210"><line x1="27" y1="0" x2="27" y2="110" stroke="#6b5a48" stroke-width="2"/><ellipse class="glow" cx="27" cy="150" rx="40" ry="44" fill="rgba(255,90,40,.18)"/><rect x="17" y="108" width="20" height="8" rx="2" fill="#3a2a1c"/><ellipse cx="27" cy="148" rx="23" ry="32" fill="#d63b22"/><path d="M27 116v64M15 122c-6 17-6 36 0 52M39 122c6 17 6 36 0 52" stroke="#a52a16" stroke-width="1.5" fill="none"/><rect x="17" y="178" width="20" height="7" rx="2" fill="#3a2a1c"/><path d="M27 185v18" stroke="#f2b134" stroke-width="3"/></svg>
+  </div>
+
+  <div class="badge-rot" aria-hidden="true"><svg viewBox="0 0 150 150"><defs><path id="circ" d="M75 75m-58 0a58 58 0 1 1 116 0a58 58 0 1 1-116 0"/></defs><text><textPath href="#circ">Street food · Cultural identity · Since forever · </textPath></text></svg><div class="center">🔥</div></div>
+  <div class="hero-stk s2"><div class="stk" data-stk="banhmi" role="img" aria-label="Talking bánh mì sticker"><div class="bubble"></div></div></div>
+  <div class="hero-stk s1"><div class="stk" data-stk="samsa" role="img" aria-label="Talking samsa sticker"><div class="bubble"></div></div></div>
+  <div class="drag-hint" aria-hidden="true">Drag the stickers</div>
+  <div class="wrap">
+    <div class="eyebrow fade" style="transition-delay:.7s">ILC 2250 · Food, Language & Identity · Fall 2026</div>
+    <h1 class="split-words">Street Food & <em>Cultural Identity:</em> Tradition meets <span class="glob">Globalization</span></h1>
+    <p class="lead fade" style="transition-delay:1.1s">From a clay-oven samsa in Tashkent to a sizzling wok in Bangkok, street food is where a nation speaks its everyday language. <span class="taste">Today we taste: <span class="typed" id="typed"></span></span></p>
+    <div class="btns fade" style="transition-delay:1.3s">
+      <a href="#about" class="btn btn-primary mag"><span>Start the Journey</span> <span class="arr">→</span></a>
+      <a href="#atlas" class="btn btn-ghost mag"><span>Explore the Atlas</span></a>
+    </div>
+    <div class="hero-meta fade" style="transition-delay:1.5s">
+      <div><b data-count="4">0</b><span>Countries</span></div>
+      <div><b data-count="13">0</b><span>Researchers</span></div>
+      <div><b data-count="7">0</b><span>Research chapters</span></div>
+      <div><b data-count="15" data-suffix="′">0</b><span>Video presentation</span></div>
+    </div>
+  </div>
+  <div class="scroll-ind fade" style="transition-delay:1.8s"><div class="mouse"></div>Scroll</div>
+</section>
+
+<div class="marquee" aria-hidden="true"><div class="track" data-speed="0.6">
+  <span>Somsa <small>Uzbekistan</small></span><span>ผัดไทย <small>Pad Thai</small></span><span>Bánh mì <small>Vietnam</small></span><span>煎饼 <small>Jianbing</small></span><span>Palov <small>Uzbekistan</small></span><span>ส้มตำ <small>Som Tam</small></span><span>Phở <small>Vietnam</small></span><span>包子 <small>Baozi</small></span><span>Tandir non <small>Uzbekistan</small></span><span>Bún chả <small>Vietnam</small></span>
+</div></div>
+<div class="marquee alt" aria-hidden="true"><div class="track" data-speed="-0.8">
+  <span>Tradition <small>meets</small></span><span>Globalization</span><span>Language <small>on a plate</small></span><span>Identity <small>on the street</small></span><span>Heritage <small>to go</small></span>
+</div></div>
+
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Why street food?</div><h2 class="split-words">Food on the street is <em>never</em> just food</h2></div>
+      <p>Street stalls sit where language, money, memory and politics meet. Every name shouted from a cart carries a story about who belongs and who is changing.</p>
+    </div>
+    <div class="themes">
+      <article class="theme tilt rv"><span class="num">01</span><div class="ico" style="background:rgba(228,80,47,.15)">🗣️</div><h3>Language</h3><p>Dish names, vendor calls and bilingual menus show how communities label themselves for locals and tourists.</p></article>
+      <article class="theme tilt rv"><span class="num">02</span><div class="ico" style="background:rgba(242,177,52,.15)">🏮</div><h3>Tradition</h3><p>Recipes passed between generations turn the sidewalk into a living archive of cultural heritage.</p></article>
+      <article class="theme tilt rv"><span class="num">03</span><div class="ico" style="background:rgba(62,159,122,.15)">🌏</div><h3>Globalization</h3><p>Fast-food chains, social media and tourism reshape what is cooked, how it is sold and who it is for.</p></article>
+      <article class="theme tilt rv"><span class="num">04</span><div class="ico" style="background:rgba(255,122,61,.15)">⚖️</div><h3>Power</h3><p>City rules, class and gender decide who may cook in public space and whose food is called “authentic”.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="statement">
+  <div class="wrap"><p id="statement">Every dish on the street carries a <i class="hl">language,</i> a <i class="hl">memory</i> and a <i class="hl">border</i> it once crossed. We follow those dishes to see what globalization keeps, changes and erases.</p></div>
+</section>
+
+
+<section class="sec" id="crew" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Meet the street crew</div><h2 class="split-words">Every dish speaks a <em>language</em></h2></div>
+      <p>Food names are words first. Tap a character to hear how it says hello, or ask it for a fact about where it comes from.</p>
+    </div>
+    <div class="crew">
+      <div class="crew-item rv" data-k="samsa"><div class="bubble"></div><div class="stk" data-stk="samsa" role="img" aria-label="Samsa character"></div><h3>Somsa</h3><div class="lang">Uzbek · Oʻzbek tili</div><div class="acts"><button class="chip" data-a="hi">👋 Hello</button><button class="chip" data-a="hear">🔊 Hear</button><button class="chip" data-a="fact">💡 Fact</button></div></div>
+      <div class="crew-item rv" data-k="padthai"><div class="bubble"></div><div class="stk" data-stk="padthai" role="img" aria-label="Pad thai character"></div><h3>Pad Thai</h3><div class="lang">Thai · ภาษาไทย</div><div class="acts"><button class="chip" data-a="hi">👋 Hello</button><button class="chip" data-a="hear">🔊 Hear</button><button class="chip" data-a="fact">💡 Fact</button></div></div>
+      <div class="crew-item rv" data-k="banhmi"><div class="bubble"></div><div class="stk" data-stk="banhmi" role="img" aria-label="Bánh mì character"></div><h3>Bánh mì</h3><div class="lang">Vietnamese · Tiếng Việt</div><div class="acts"><button class="chip" data-a="hi">👋 Hello</button><button class="chip" data-a="hear">🔊 Hear</button><button class="chip" data-a="fact">💡 Fact</button></div></div>
+      <div class="crew-item rv" data-k="baozi"><div class="bubble"></div><div class="stk" data-stk="baozi" role="img" aria-label="Baozi character"></div><h3>Baozi</h3><div class="lang">Mandarin · 中文</div><div class="acts"><button class="chip" data-a="hi">👋 Hello</button><button class="chip" data-a="hear">🔊 Hear</button><button class="chip" data-a="fact">💡 Fact</button></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="atlas" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Street Food Atlas</div><h2 class="split-words">Four streets, <em>four</em> stories</h2></div>
+      <p>Hover a country to taste its signature street dishes, then open the full case study.</p>
+    </div>
+    <div class="atlas">
+      <a class="country tilt rvc" href="#atlas" data-soon data-cursor="view"><img src="https://images.unsplash.com/photo-1699438998191-6d164a8716c3?w=900&q=70&auto=format&fit=crop" alt="Freshly baked round Uzbek tandir bread with a stamped pattern on a market table"><span class="flag">Central Asia</span><span class="idx">01</span><div class="native">Oʻzbekiston</div><h3>Uzbekistan</h3><div class="dishes">Somsa · Palov · Tandir non · Shashlik — bazaar food at the heart of the Silk Road.</div><div class="go"><i>→</i>Case study</div></a>
+      <a class="country tilt rvc" href="#atlas" data-soon data-cursor="view"><img src="https://images.unsplash.com/photo-1552538962-40822613a09d?w=900&q=70&auto=format&fit=crop" alt="A cook tossing food in a flaming wok at a Bangkok street stall at night"><span class="flag">Southeast Asia</span><span class="idx">02</span><div class="native">ประเทศไทย</div><h3>Thailand</h3><div class="dishes">Pad Thai · Som Tam · Moo Ping — a national dish invented for nation-building.</div><div class="go"><i>→</i>Case study</div></a>
+      <a class="country tilt rvc" href="#atlas" data-soon data-cursor="view"><img src="https://images.unsplash.com/photo-1495118616717-6816692b9430?w=900&q=70&auto=format&fit=crop" alt="A Hanoi street vendor's bicycle loaded with fresh vegetables beside parked motorbikes"><span class="flag">Southeast Asia</span><span class="idx">03</span><div class="native">Việt Nam</div><h3>Vietnam</h3><div class="dishes">Phở · Bánh mì · Bún chả — colonial bread turned into a national icon.</div><div class="go"><i>→</i>Case study</div></a>
+      <a class="country tilt rvc" href="#atlas" data-soon data-cursor="view"><img src="https://images.unsplash.com/photo-1552912470-ee2e96439539?w=900&q=70&auto=format&fit=crop" alt="A woman cooking skewers and dumplings at a busy Chinese street food stall"><span class="flag">East Asia</span><span class="idx">04</span><div class="native">中国</div><h3>China</h3><div class="dishes">Jianbing · Baozi · Chuan’r — breakfast carts in a fast-modernising city.</div><div class="go"><i>→</i>Case study</div></a>
+    </div>
+  </div>
+</section>
+
+
+<section class="sec" id="route" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">The street-food route</div><h2 class="split-words">From the <em>Silk Road</em> to the Mekong</h2></div>
+      <p>Scroll to send our food cart across Asia. Click any city to stop and look around.</p>
+    </div>
+    <div class="route">
+      <div class="map rv">
+        <svg viewBox="0 0 1000 600" role="img" aria-label="Stylised map of Asia with a route from Tashkent to Beijing, Hanoi and Bangkok">
+          <defs><pattern id="dotp" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="14" cy="14" r="1.6" fill="rgba(246,236,219,.14)"/></pattern><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4502f"/><stop offset=".5" stop-color="#f2b134"/><stop offset="1" stop-color="#3e9f7a"/></linearGradient></defs>
+          <rect width="1000" height="600" fill="url(#dotp)"/>
+          <text class="region" x="170" y="250">SILK ROAD</text><text class="region" x="420" y="560">MEKONG</text><text class="region" x="560" y="250">CHINA</text>
+          <path class="rpath-bg" d="M141 116C380 20 660 30 868 135C905 240 770 300 705 387C680 430 645 455 623 483"/>
+          <path class="rpath" id="rpath" d="M141 116C380 20 660 30 868 135C905 240 770 300 705 387C680 430 645 455 623 483"/>
+          <g class="city" data-c="tashkent" tabindex="0" role="button" aria-label="Tashkent"><circle class="ring" cx="141" cy="116" r="14"/><circle class="pin" cx="141" cy="116" r="10"/><text x="108" y="160">TASHKENT</text></g>
+          <g class="city" data-c="beijing" tabindex="0" role="button" aria-label="Beijing"><circle class="ring" cx="868" cy="135" r="14"/><circle class="pin" cx="868" cy="135" r="10"/><text x="820" y="104">BEIJING</text></g>
+          <g class="city" data-c="hanoi" tabindex="0" role="button" aria-label="Hanoi"><circle class="ring" cx="705" cy="387" r="14"/><circle class="pin" cx="705" cy="387" r="10"/><text x="730" y="392">HANOI</text></g>
+          <g class="city" data-c="bangkok" tabindex="0" role="button" aria-label="Bangkok"><circle class="ring" cx="623" cy="483" r="14"/><circle class="pin" cx="623" cy="483" r="10"/><text x="648" y="500">BANGKOK</text></g>
+          <text class="cart" id="cart" x="125" y="126">🛺</text>
+        </svg>
+      </div>
+      <div class="city-card rv"><div class="cc-in" id="ccIn"></div><div class="nav-c"><button class="chip" id="cPrev">← Prev</button><button class="chip" id="cNext">Next city →</button></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="versus" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Tradition vs Globalization</div><h2 class="split-words">Drag the line between <em>two</em> worlds</h2></div>
+      <p>The bazaar bread stall and the fast-food counter often stand on the same street. Slide to compare.</p>
+    </div>
+    <div class="ba rv" id="ba">
+      <img src="https://images.unsplash.com/photo-1758578484459-677bfbbd00f7?w=1400&q=70&auto=format&fit=crop" alt="A modern fast-food restaurant counter with digital menu boards">
+      <img class="top" src="https://images.unsplash.com/photo-1743414256055-05993b349771?w=1400&q=70&auto=format&fit=crop" alt="Stacks of traditional round bread on a patterned cloth at a bazaar">
+      <span class="lbl l">Tradition</span><span class="lbl r">Globalization</span>
+      <div class="handle"><div class="knob">⇆</div></div>
+      <input type="range" min="0" max="100" value="50" aria-label="Compare tradition and globalization images">
+    </div>
+    <div class="ba-cap">
+      <div class="rv"><b>The bazaar</b><p>Made by hand, sold face-to-face, named in the local language. Recipes are inherited, not designed.</p></div>
+      <div class="rv"><b>The chain counter</b><p>Standard menus, global branding, the same taste in every city — but often adapted to local palates (“glocalization”).</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="facts" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Did you know?</div><h2 class="split-words">Tap a card to <em>flip</em> it</h2></div>
+      <p>Four small facts that show how big street food has become.</p>
+    </div>
+    <div class="flips">
+      <button class="flip rv" aria-pressed="false"><div class="f"><span class="big">⭐</span><h4>Which street cook won a Michelin star?</h4><small>Tap to reveal</small></div><div class="b"><div class="ans">Jay Fai</div><p>A Bangkok street cook famous for her crab omelette, won a star when the first Michelin Guide Bangkok launched in December 2017.</p></div></button>
+      <button class="flip rv" aria-pressed="false"><div class="f"><span class="big">📖</span><h4>When did “bánh mì” enter the Oxford English Dictionary?</h4><small>Tap to reveal</small></div><div class="b"><div class="ans">2011</div><p>A Vietnamese word for “bread” became part of the English language.</p></div></button>
+      <button class="flip rv" aria-pressed="false"><div class="f"><span class="big">🏛️</span><h4>Which Uzbek food tradition is on UNESCO’s list?</h4><small>Tap to reveal</small></div><div class="b"><div class="ans">Palov</div><p>“Palov culture and tradition” was inscribed as Intangible Cultural Heritage in 2016.</p></div></button>
+      <button class="flip rv" aria-pressed="false"><div class="f"><span class="big">🇹🇭</span><h4>Why did pad thai become “the” Thai dish?</h4><small>Tap to reveal</small></div><div class="b"><div class="ans">Nation-building</div><p>In the 1930s–40s the government promoted it to shape a modern national identity.</p></div></button>
+    </div>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:0">
+  <div class="wrap split">
+    <div class="split-img rvc"><img id="parImg" src="https://images.unsplash.com/photo-1521022887356-1db35c7bbf1f?w=1100&q=70&auto=format&fit=crop" alt="Rows of grilled meat skewers sizzling over charcoal at a night market"><div class="tag">“Tell me what you eat, and I will tell you what you are.”<small>Jean Anthelme Brillat-Savarin, 1825</small></div></div>
+    <div class="rv">
+      <div class="kicker">The big question</div>
+      <h2 class="split-words">Can a dish stay <em>local</em> in a global world?</h2>
+      <p>When pad thai is served in New York and bánh mì enters the Oxford English Dictionary, who still owns the recipe? When a Tashkent somsa stand sits next to a burger chain, what changes in how young people eat — and speak about food?</p>
+      <p>Our project follows these questions through history, sociology and language, using real cases from Uzbekistan, Thailand, Vietnam and China.</p>
+      <div class="pillrow"><span class="pill">Glocalization</span><span class="pill">Gastrodiplomacy</span><span class="pill">Authenticity</span><span class="pill">Informal economy</span><span class="pill">Heritage</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="research" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div><div class="kicker">Research Knowledge Base</div><h2 class="split-words">Seven chapters of <em>research</em></h2></div>
+      <p>The intellectual core of the project — each chapter is a full page with APA citations.</p>
+    </div>
+    <div class="path-wrap" id="pathWrap">
+      <div class="path-line"><i id="pathLine"></i></div>
+      <div class="path">
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">01</div><h4>Topic Introduction</h4><p>What street food is and why it matters.</p><div class="by">Ismoiljon</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">02</div><h4>Historical Development</h4><p>Silk Road bazaars to colonial bread.</p><div class="by">Ismoiljon</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">03</div><h4>Society & Power</h4><p>Class, gender and the right to the sidewalk.</p><div class="by">Zulayho</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">04</div><h4>Global Reception</h4><p>How the world adapts our dishes.</p><div class="by">Zulayho</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">05</div><h4>Research Gap</h4><p>What scholars have missed.</p><div class="by">Abdurahmon</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">06</div><h4>Our Perspective</h4><p>Where we stand in the debate.</p><div class="by">Abdurahmon</div></a>
+        <a class="step" href="#research" data-soon><span class="dot"></span><div class="n">07</div><h4>Public Engagement</h4><p>From research to real projects.</p><div class="by">Abdurahmon</div></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="team" style="padding-top:0">
+  <div class="wrap tv">
+    <div class="card rv">
+      <div class="kicker">The Team</div>
+      <h2 style="font-size:2.2rem">13 researchers, one table</h2>
+      <div class="avatars" id="avatars">
+        <div class="av" data-name="Daniya · Website">D</div><div class="av" data-name="Abdulaziz · Website">A</div><div class="av" data-name="Feruza · Video">F</div><div class="av" data-name="Sardor · Video">S</div><div class="av" data-name="Kamola · Part A">K</div><div class="av" data-name="Shakhnoza · Part B">Sh</div><div class="av" data-name="Sitora · Part B">S</div>
+        <div class="av" data-name="Ismoiljon · Part C">I</div><div class="av" data-name="Zulayho · Part C">Z</div><div class="av" data-name="Abdurahmon · Part C">A</div><div class="av" data-name="Behroz · Part D">B</div><div class="av" data-name="Saidakbar · Part D">S</div><div class="av" data-name="Yakub · Part D">Y</div>
+      </div>
+      <p style="color:var(--cream-dim);font-size:.93rem">Photos coming soon. Hover a circle to see who did what.</p>
+      <div class="btns" style="margin-top:22px"><a href="#team" data-soon class="btn btn-ghost mag"><span>Meet the team</span> <span class="arr">→</span></a></div>
+    </div>
+    <div class="card rv" id="video">
+      <div class="kicker">Oral Presentation</div>
+      <h2 style="font-size:2.2rem">Our 15-minute story</h2>
+      <div class="video" role="button" tabindex="0" data-soon data-cursor="play" aria-label="Video placeholder">
+        <div class="vbg"></div>
+        <div><div class="play"></div><b class="serif" style="font-size:1.2rem">Video coming soon</b><br><small>Overview · 10 key insights · Future vision</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer id="footer">
+  <div class="wrap">
+    <div class="foot">
+      <div><a href="#top" class="logo"><span class="logo-mark" aria-hidden="true"></span>Street Stories</a><p>A team project for ILC 2250 Food, Language and Identity, Webster University Tashkent. Professor Patcharin V. Jain.</p></div>
+      <div><h5>Explore</h5><a href="#about">About</a><a href="#atlas">Atlas</a><a href="#research">Research</a></div>
+      <div><h5>Team</h5><a href="#team">Members</a><a href="#team" data-soon>Reflections</a><a href="#video">Video</a></div>
+      <div><h5>Project</h5><a href="#footer" data-soon>Conclusion</a><a href="#footer" data-soon>Discussion</a><a href="#footer" data-soon>References</a></div>
+    </div>
+    <div class="mega" aria-hidden="true">Street Stories<span>Street Stories</span></div>
+    <div class="copy"><span>© 2026 Street Stories Team</span><span>Fall 2026 · Final Project</span></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine=matchMedia('(hover:hover) and (pointer:fine)').matches;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+
+/* split headings into masked words */
+$$('.split-words').forEach(el=>{
+  const walk=n=>{[...n.childNodes].forEach(c=>{
+    if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const w=document.createElement('span');w.className='w';const i=document.createElement('span');i.textContent=t;w.append(i);f.append(w)});c.replaceWith(f)}
+    else if(c.nodeType===1&&!c.classList.contains('glob'))walk(c);
+    else if(c.nodeType===1){const w=document.createElement('span');w.className='w';c.replaceWith(w);const i=document.createElement('span');i.append(c);w.append(i)}
+  })};walk(el);
+  el.querySelectorAll('.w>span').forEach((s,i)=>s.style.transitionDelay=(el.closest('.hero')?0.25:0)+i*0.06+'s');
+});
+
+/* loader */
+const pct=$('#pct');let p=0;
+const tick=()=>{p+=Math.max(1,(100-p)*0.09);if(p>=99.5)p=100;pct.textContent=Math.round(p);if(p<100)setTimeout(tick,28);else setTimeout(start,250)};
+const start=()=>{$('#loader').classList.add('done');document.body.classList.remove('loading');document.body.classList.add('ready');setTimeout(counters,1500);setTimeout(()=>$('#loader').remove(),1200)};
+RM?start():tick();
+
+/* counters */
+function counters(){$$('[data-count]').forEach(el=>{const to=+el.dataset.count,suf=el.dataset.suffix||'';const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/1400),e=1-Math.pow(1-k,4);el.textContent=Math.round(to*e)+suf;if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
+
+/* typewriter */
+const words=['somsa in Tashkent.','pad thai in Bangkok.','bánh mì in Hanoi.','jianbing in Beijing.','palov at a wedding.'];
+const ty=$('#typed');let wi=0,ci=0,del=false;
+const type=()=>{const w=words[wi];ty.textContent=w.slice(0,ci)||'\u200b';if(!del&&ci<w.length){ci++;setTimeout(type,70)}else if(!del){del=true;setTimeout(type,1600)}else if(ci>0){ci--;setTimeout(type,35)}else{del=false;wi=(wi+1)%words.length;setTimeout(type,300)}};
+setTimeout(type,RM?0:2200);
+
+/* embers canvas */
+const cv=$('#embers'),cx=cv.getContext('2d');let W,H,parts=[];
+const rs=()=>{const r=devicePixelRatio>1?1.5:1;W=cv.width=cv.offsetWidth*r;H=cv.height=cv.offsetHeight*r};rs();addEventListener('resize',rs);
+const N=innerWidth<600?28:60;
+const mk=()=>({x:Math.random()*W,y:H+Math.random()*H*.4,r:Math.random()*2.2+.6,vy:Math.random()*.8+.35,vx:(Math.random()-.5)*.4,ph:Math.random()*6.28,life:0,hue:Math.random()<.7?'255,122,61':'242,177,52'});
+for(let i=0;i<N;i++){const q=mk();q.y=Math.random()*H;parts.push(q)}
+let heroVisible=true;new IntersectionObserver(e=>heroVisible=e[0].isIntersecting).observe($('#hero'));
+const draw=()=>{if(heroVisible&&!RM){cx.clearRect(0,0,W,H);parts.forEach((q,i)=>{q.life+=.01;q.y-=q.vy*1.6;q.x+=q.vx+Math.sin(q.ph+q.life*3)*.5;const a=Math.max(0,Math.min(1,q.y/H))*.9;cx.beginPath();cx.fillStyle=`rgba(${q.hue},${a})`;cx.shadowBlur=12;cx.shadowColor=`rgba(${q.hue},1)`;cx.arc(q.x,q.y,q.r,0,6.28);cx.fill();if(q.y<-10)parts[i]=mk()})}requestAnimationFrame(draw)};draw();
+
+/* magnetic buttons */
+if(fine&&!RM)$$('.mag').forEach(b=>{b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.25}px,${(e.clientY-r.top-r.height/2)*.35}px)`});b.addEventListener('mouseleave',()=>{b.style.transition='transform .5s cubic-bezier(.2,.75,.15,1)';b.style.transform='';setTimeout(()=>b.style.transition='',500)})});
+
+/* tilt + spotlight */
+if(fine&&!RM)$$('.tilt').forEach(c=>{c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;c.style.setProperty('--mx',x*100+'%');c.style.setProperty('--my',y*100+'%');c.style.transform=`rotateY(${(x-.5)*12}deg) rotateX(${(.5-y)*12}deg) translateY(-6px)`});c.addEventListener('mouseleave',()=>{c.style.transform=''})});
+
+/* reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const el=e.target;const sibs=[...el.parentElement.children].filter(x=>x.matches('.rv,.rvc'));const d=sibs.length>1?sibs.indexOf(el)*110:0;setTimeout(()=>{el.classList.add('in');el.querySelectorAll('.split-words').forEach(h=>h.classList.add('in'))},d);io.unobserve(el)}}),{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+$$('.rv').forEach(el=>io.observe(el));
+const io2=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const el=e.target;const sibs=[...el.parentElement.children].filter(x=>x.matches('.rvc'));const d=sibs.length>1?sibs.indexOf(el)*120:0;setTimeout(()=>el.classList.add('in'),d);io2.unobserve(el)}}),{threshold:0});
+$$('.rvc').forEach(el=>io2.observe(el));
+$$('.pill').forEach((p,i)=>p.style.transitionDelay=.3+i*.08+'s');
+$$('.av').forEach((a,i)=>a.style.transitionDelay=i*.05+'s');
+$$('.card .avatars').forEach(a=>io.observe(a.closest('.card')));
+
+/* statement words */
+const st=$('#statement');const sw=[];
+[...st.childNodes].forEach(n=>{const hl=n.nodeType===1;const txt=n.textContent;const f=document.createDocumentFragment();txt.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const s=document.createElement('span');s.className='sw'+(hl?' hl':'');s.textContent=t;sw.push(s);f.append(s)});n.replaceWith(f)});
+
+/* scroll-driven */
+const nav=$('#nav'),bar=$('#progress'),heroBg=$('#heroBg'),pl=$('#pathLine'),pw=$('#pathWrap'),steps=$$('.step'),parImg=$('#parImg'),totop=$('#totop'),circ=totop.querySelector('circle');
+const tracks=$$('.track').map(t=>({el:t,x:0,base:+t.dataset.speed}));
+tracks.forEach(t=>{t.el.innerHTML+=t.el.innerHTML;t.el.innerHTML+=t.el.innerHTML});
+let lastY=scrollY,vel=0,ticking=false;
+const onScroll=()=>{const y=scrollY,h=document.documentElement.scrollHeight-innerHeight,k=y/h;
+  bar.style.transform=`scaleX(${k})`;
+  nav.classList.toggle('scrolled',y>30);nav.classList.toggle('hide',y>lastY&&y>400&&!$('#mobile').classList.contains('open'));
+  vel=y-lastY;lastY=y;
+  if(!RM&&y<innerHeight*1.2)heroBg.style.transform=`translate3d(${mxh}px,${y*.35+myh}px,0) scale(1.08)`;
+  /* statement */
+  const r=st.getBoundingClientRect();const prog=Math.min(1,Math.max(0,(innerHeight*.85-r.top)/(r.height+innerHeight*.35)));const n=Math.floor(prog*sw.length*1.15);sw.forEach((s,i)=>s.classList.toggle('lit',i<n));
+  /* path */
+  const pr=pw.getBoundingClientRect();const pp=Math.min(1,Math.max(0,(innerHeight*.8-pr.top)/(pr.height*0.9)));pl.style.transform=`scaleX(${pp})`;steps.forEach((s,i)=>s.classList.toggle('on',RM||pp>=i/7||pr.top<innerHeight*.75&&innerWidth<1050));
+  /* parallax img */
+  const ir=parImg.parentElement.getBoundingClientRect();if(!RM)parImg.style.transform=`translateY(${(ir.top/innerHeight)*-12}%)`;
+  totop.classList.toggle('show',y>700);circ.style.strokeDashoffset=138-138*k;
+  ticking=false};
+addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(onScroll);ticking=true}},{passive:true});
+/* hero mouse parallax */
+let mxh=0,myh=0;if(fine&&!RM)$('#hero').addEventListener('mousemove',e=>{mxh=(e.clientX/innerWidth-.5)*-24;myh=(e.clientY/innerHeight-.5)*-16;heroBg.style.transform=`translate3d(${mxh}px,${scrollY*.35+myh}px,0) scale(1.08)`});
+/* marquee loop with scroll velocity */
+const mloop=()=>{if(!RM)tracks.forEach(t=>{const w=t.el.scrollWidth/4;t.x-=t.base*(1+Math.min(Math.abs(vel)*.15,6));if(t.base>0&&t.x<=-w)t.x+=w;if(t.base<0&&t.x>=0)t.x-=w;t.el.style.transform=`translateX(${t.x}px) skewX(${Math.max(-8,Math.min(8,-vel*.15))}deg)`});vel*=.9;requestAnimationFrame(mloop)};
+tracks.forEach(t=>{if(t.base<0)t.x=-t.el.scrollWidth/4});mloop();
+onScroll();
+
+/* nav menu */
+const b=$('#burger'),m=$('#mobile');
+b.onclick=()=>{const o=b.classList.toggle('open');m.classList.toggle('open',o);b.setAttribute('aria-expanded',o);m.querySelectorAll('a').forEach((a,i)=>a.style.transitionDelay=o?.25+i*.06+'s':'0s')};
+m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{b.classList.remove('open');m.classList.remove('open')}));
+totop.onclick=()=>scrollTo({top:0,behavior:'smooth'});
+/* smooth anchors */
+$$('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{if(a.hasAttribute('data-soon'))return;const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();scrollTo({top:t.getBoundingClientRect().top+scrollY-(a.getAttribute('href')==='#top'?scrollY:70),behavior:'smooth'})}}));
+/* toast */
+const t=$('#toast');let tt;
+$$('[data-soon]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();t.textContent='This page opens in the full version ✦';t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}));
+})();
+</script>
+<script>
+/* ===== V3: talking stickers, map, before/after, flips ===== */
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let uid=0;
+const face=(cx,cy)=>`
+ <ellipse cx="${cx-27}" cy="${cy+9}" rx="8" ry="5" fill="rgba(255,110,110,.55)"/><ellipse cx="${cx+27}" cy="${cy+9}" rx="8" ry="5" fill="rgba(255,110,110,.55)"/>
+ <g class="eyes"><circle cx="${cx-16}" cy="${cy-9}" r="9.5" fill="#fff"/><circle cx="${cx+16}" cy="${cy-9}" r="9.5" fill="#fff"/>
+ <circle class="pupil" data-x="${cx-16}" data-y="${cy-9}" cx="${cx-16}" cy="${cy-9}" r="5" fill="#1d120b"/><circle class="pupil" data-x="${cx+16}" data-y="${cy-9}" cx="${cx+16}" cy="${cy-9}" r="5" fill="#1d120b"/></g>
+ <g class="mouth"><ellipse class="m" cx="${cx}" cy="${cy+11}" rx="10" ry="3" fill="#3a1408"/><ellipse class="tg" cx="${cx}" cy="${cy+14}" rx="5.5" ry="0" fill="#ff7b7b"/></g>`;
+const ART={
+ samsa:()=>{const g='gS'+(uid++);return `<svg viewBox="0 0 160 150" aria-hidden="true"><defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7c862"/><stop offset="1" stop-color="#d47b25"/></linearGradient></defs>
+  <path d="M80 12C87 12 91 17 95 24L149 117C156 130 149 140 134 140H26C11 140 4 130 11 117L65 24C69 17 73 12 80 12Z" fill="url(#${g})"/>
+  <path d="M20 132q8 6 16 0q8 6 16 0q8 6 16 0q8 6 16 0q8 6 16 0q8 6 16 0q8 6 16 0" stroke="#b8621a" stroke-width="2.5" fill="none" opacity=".6"/>
+  <g fill="#fff3d0"><ellipse cx="76" cy="40" rx="2.4" ry="4" transform="rotate(20 76 40)"/><ellipse cx="87" cy="52" rx="2.4" ry="4" transform="rotate(-30 87 52)"/><ellipse cx="70" cy="60" rx="2.4" ry="4" transform="rotate(60 70 60)"/><ellipse cx="95" cy="70" rx="2.4" ry="4" transform="rotate(10 95 70)"/><ellipse cx="62" cy="76" rx="2.4" ry="4" transform="rotate(-50 62 76)"/></g>
+  ${face(80,102)}</svg>`},
+ banhmi:()=>{const g='gB'+(uid++);return `<svg viewBox="0 0 160 150" aria-hidden="true"><defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eeb058"/><stop offset="1" stop-color="#b8681e"/></linearGradient></defs>
+  <path d="M20 72l7-15 7 12 7-17 7 15 7-14 7 15 7-17 7 15 7-14 7 16 7-15 7 14 7-16 7 15 7-13 4 14z" fill="#3e9f7a"/>
+  <ellipse cx="44" cy="62" rx="7" ry="4" fill="#e4502f" transform="rotate(-25 44 62)"/><ellipse cx="118" cy="60" rx="9" ry="5" fill="#9fd36b" transform="rotate(15 118 60)"/>
+  <path d="M8 94C8 64 40 56 80 56S152 64 152 94C152 120 120 130 80 130S8 120 8 94Z" fill="url(#${g})"/>
+  <g stroke="#fbe2b0" stroke-width="3" stroke-linecap="round" fill="none" opacity=".7"><path d="M26 76q8-6 16-4"/><path d="M118 72q8-2 16 4"/></g>
+  ${face(80,96)}</svg>`},
+ baozi:()=>{const g='gZ'+(uid++);return `<svg viewBox="0 0 160 150" aria-hidden="true"><defs><radialGradient id="${g}" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="#fffaf1"/><stop offset="1" stop-color="#e6d3b4"/></radialGradient></defs>
+  <g class="stm" stroke="#cbbca4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"><path d="M58 30c-5-7 5-11 0-18"/><path d="M80 26c-5-7 5-11 0-18"/><path d="M102 30c-5-7 5-11 0-18"/></g>
+  <path d="M16 120C12 72 42 42 80 40C118 42 148 72 144 120C122 136 38 136 16 120Z" fill="url(#${g})"/>
+  <g stroke="#d4bf9c" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M80 44C72 52 62 56 50 56"/><path d="M80 44C88 52 98 56 110 56"/><path d="M80 44C76 54 70 62 60 66"/><path d="M80 44C84 54 90 62 100 66"/></g>
+  <circle cx="80" cy="44" r="4" fill="#e4502f"/>
+  ${face(80,98)}</svg>`},
+ padthai:()=>`<svg viewBox="0 0 160 150" aria-hidden="true">
+  <g stroke="#7a4a26" stroke-width="5" stroke-linecap="round"><path d="M104 74L150 14"/><path d="M114 76L156 22"/></g>
+  <g stroke="#f2c46a" stroke-width="6" fill="none" stroke-linecap="round"><path d="M24 80C30 62 42 76 50 60S66 72 74 58S90 72 98 60S114 74 120 62S134 70 138 80"/><path d="M30 80C38 70 46 80 56 68S72 78 82 66S100 78 110 68S128 76 132 80"/></g>
+  <path d="M100 58c10-12 26-6 24 6c-1 8-10 10-14 6" stroke="#ff8a5c" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M30 70l14-16 10 18z" fill="#9fd36b" stroke="#5e9e3a" stroke-width="2"/>
+  <path d="M12 80H148C148 120 120 142 80 142S12 120 12 80Z" fill="#e4502f"/>
+  <ellipse cx="80" cy="80" rx="68" ry="7" fill="#c23a1f"/>
+  <path d="M16 92H144" stroke="#fff" stroke-width="3" stroke-dasharray="8 6" opacity=".55"/>
+  ${face(80,112)}</svg>`
+};
+$$('[data-stk]').forEach(el=>{el.insertAdjacentHTML('afterbegin',ART[el.dataset.stk]())});
+
+/* eyes follow pointer */
+let px=innerWidth/2,py=innerHeight/2,eyeReq=false;
+const look=()=>{eyeReq=false;$$('.stk').forEach(s=>{const r=s.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;const svg=s.querySelector('svg');const sc=r.width/160;
+  s.querySelectorAll('.pupil').forEach(p=>{const ex=r.left+(+p.dataset.x)*sc,ey=r.top+(+p.dataset.y)*sc;const dx=px-ex,dy=py-ey,d=Math.hypot(dx,dy)||1,k=Math.min(4.2,d/40);p.setAttribute('cx',+p.dataset.x+dx/d*k);p.setAttribute('cy',+p.dataset.y+dy/d*k)})})};
+const req=()=>{if(!eyeReq){eyeReq=true;requestAnimationFrame(look)}};
+addEventListener('pointermove',e=>{px=e.clientX;py=e.clientY;req()},{passive:true});addEventListener('scroll',req,{passive:true});
+
+/* talking */
+const mouthTimers=new WeakMap();
+const mouthOn=s=>{if(mouthTimers.get(s))return;s.classList.add('talking');const m=s.querySelector('.m'),tg=s.querySelector('.tg');const cy=+m.getAttribute('cy');
+  const t=setInterval(()=>{const ry=2+Math.random()*9;m.setAttribute('ry',ry);m.setAttribute('rx',8+Math.random()*4);tg.setAttribute('ry',ry>5?Math.min(4,ry*.4):0);tg.setAttribute('cy',cy+ry*.55)},90);mouthTimers.set(s,t)};
+const mouthOff=s=>{clearInterval(mouthTimers.get(s));mouthTimers.delete(s);s.classList.remove('talking');const m=s.querySelector('.m');m.setAttribute('ry',3);m.setAttribute('rx',10);s.querySelector('.tg').setAttribute('ry',0)};
+function say(s,html,plainLen,ms){const bub=s.querySelector('.bubble')||s.parentElement.querySelector('.bubble');bub.innerHTML=html;bub.classList.add('show');mouthOn(s);
+  const dur=ms||Math.max(900,plainLen*55);clearTimeout(s._t1);clearTimeout(s._t2);s._t1=setTimeout(()=>mouthOff(s),dur);s._t2=setTimeout(()=>bub.classList.remove('show'),dur+1800)}
+window.__say=say;
+
+/* hero stickers auto-chat */
+const hs=$$('.hero-stk .stk');const lines=[[hs[0],'Salom! 👋'],[hs[1],'Xin chào! Hungry yet?'],[hs[0],'Drag me around!'],[hs[1],'Tradition tastes better.'],[hs[0],'Welcome to the street!']];
+let li=0;const chat=()=>{if(document.body.classList.contains('ready')&&hs[0]&&hs[0].offsetParent){const [s,t]=lines[li++%lines.length];say(s,t,t.length)}setTimeout(chat,3800)};setTimeout(chat,2600);
+hs.forEach(s=>s.addEventListener('click',()=>{if(s._moved)return;say(s,'Hey, that tickles! 😆',20)}));
+
+/* drag */
+$$('.hero-stk').forEach(el=>{let sx,sy,ox,oy,on=false;
+  el.addEventListener('pointerdown',e=>{on=true;el.setPointerCapture(e.pointerId);const r=el.getBoundingClientRect(),pr=el.offsetParent.getBoundingClientRect();ox=r.left-pr.left;oy=r.top-pr.top;sx=e.clientX;sy=e.clientY;el.querySelector('.stk')._moved=false;el.classList.add('drag');el.style.left=ox+'px';el.style.top=oy+'px';el.style.right='auto';el.style.bottom='auto'});
+  el.addEventListener('pointermove',e=>{if(!on)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>4)el.querySelector('.stk')._moved=true;el.style.left=ox+dx+'px';el.style.top=oy+dy+'px';el.style.rotate=(dx*.05)+'deg'});
+  el.addEventListener('pointerup',()=>{on=false;el.style.rotate='0deg'});});
+
+/* crew */
+const CREW={
+ samsa:{nat:'Assalomu alaykum!',tr:'Hello! (Uzbek)',lang:'uz-UZ',fact:'I’m baked on the hot wall of a clay <b>tandir</b> oven. My cousin palov joined UNESCO’s heritage list in 2016!'},
+ banhmi:{nat:'Xin chào!',tr:'Hello! (Vietnamese)',lang:'vi-VN',fact:'My name simply means <b>“bread”</b>. A French baguette became Vietnamese — and I entered the Oxford English Dictionary in 2011.'},
+ padthai:{nat:'สวัสดีครับ',tr:'Sawasdee krap! (Thai)',lang:'th-TH',fact:'In the 1930s–40s Thailand’s government promoted me to build a <b>modern national identity</b>.'},
+ baozi:{nat:'你好!',tr:'Nǐ hǎo! (Mandarin)',lang:'zh-CN',fact:'<b>Bāo (包)</b> means “to wrap”. I’m the steamed bun people grab on the way to work.'}};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2400)};
+$$('.crew-item').forEach(it=>{const k=it.dataset.k,d=CREW[k],s=it.querySelector('.stk'),bub=it.querySelector('.bubble');
+  const greet=()=>{bub.classList.remove('wide');say(s,`<span class="nat">${d.nat}</span>${d.tr}`,d.nat.length+8,1600)};
+  it.querySelector('[data-a=hi]').addEventListener('click',e=>{e.stopPropagation();greet()});
+  it.querySelector('[data-a=fact]').addEventListener('click',e=>{e.stopPropagation();bub.classList.add('wide');say(s,d.fact,d.fact.replace(/<[^>]+>/g,'').length*.7)});
+  it.querySelector('[data-a=hear]').addEventListener('click',e=>{e.stopPropagation();
+    try{const ss=window.speechSynthesis;if(!ss)throw 0;const u=new SpeechSynthesisUtterance(d.nat.replace(/[!]/g,''));u.lang=d.lang;const v=ss.getVoices().find(v=>v.lang.replace('_','-').startsWith(d.lang.slice(0,2)));if(v)u.voice=v;else if(ss.getVoices().length)toast('No '+d.tr.split('(')[1].replace(')','')+' voice on this device — reading the sign instead');
+      bub.classList.remove('wide');bub.innerHTML=`<span class="nat">${d.nat}</span>${d.tr}`;bub.classList.add('show');mouthOn(s);u.onend=()=>{mouthOff(s);setTimeout(()=>bub.classList.remove('show'),1200)};u.onerror=u.onend;ss.cancel();ss.speak(u);setTimeout(()=>{if(!ss.speaking){mouthOff(s)}},2500)}catch(_){greet()}});
+  it.addEventListener('click',greet);
+});
+/* crew greets when scrolled into view, one by one */
+const crewIO=new IntersectionObserver(es=>{if(es[0].isIntersecting){$$('.crew-item').forEach((it,i)=>setTimeout(()=>it.click(),400+i*900));crewIO.disconnect()}},{threshold:.5});
+if($('.crew'))crewIO.observe($('.crew'));
+
+/* route map */
+const CITIES={
+ tashkent:{e:'🫓',n:'Tashkent',w:'Chorsu Bazaar · Uzbekistan',t:'Under the blue dome of Chorsu, vendors pull somsa from clay tandir ovens and stack round non bread. Food is bargained for in Uzbek and Russian at once — a daily sign of the city’s layered history.',d:['Somsa','Tandir non','Palov','Shashlik']},
+ beijing:{e:'🥞',n:'Beijing',w:'Hutong breakfast carts · China',t:'Before work, queues form at jianbing carts in the old hutong lanes. City campaigns to “tidy” the streets have pushed many carts indoors — raising the question of who gets to cook in public.',d:['Jianbing','Baozi','Chuan’r skewers']},
+ hanoi:{e:'🥖',n:'Hanoi',w:'Old Quarter sidewalks · Vietnam',t:'Tiny plastic stools turn the sidewalk into a dining room. The French baguette, once a colonial import, became bánh mì — a symbol of how Vietnam made foreign food its own.',d:['Phở','Bún chả','Bánh mì']},
+ bangkok:{e:'🍜',n:'Bangkok',w:'Yaowarat (Chinatown) · Thailand',t:'Bangkok’s night markets are world-famous, and street cook Jay Fai earned a Michelin star in 2017. Yet the city has also tried to clear vendors from main roads — tradition and tourism pulling in different directions.',d:['Pad Thai','Som Tam','Moo Ping']}};
+const order=['tashkent','beijing','hanoi','bangkok'];let cur='tashkent';
+const cc=$('#ccIn');
+const show=k=>{cur=k;$$('.city').forEach(c=>c.classList.toggle('act',c.dataset.c===k));cc.classList.add('swap');setTimeout(()=>{const d=CITIES[k];
+  cc.innerHTML=`<div class="stamp">${d.e}</div><h3>${d.n}</h3><div class="where">${d.w}</div><p>${d.t}</p><div class="dl">${d.d.map(x=>`<span class="pill" style="opacity:1;transform:none">${x}</span>`).join('')}</div>`;cc.classList.remove('swap')},250)};
+$$('.city').forEach(c=>{c.addEventListener('click',()=>show(c.dataset.c));c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(c.dataset.c)}})});
+$('#cPrev').onclick=()=>show(order[(order.indexOf(cur)+3)%4]);$('#cNext').onclick=()=>show(order[(order.indexOf(cur)+1)%4]);
+show('tashkent');
+const rp=$('#rpath'),cart=$('#cart'),L=rp.getTotalLength(),mapEl=$('.map');rp.style.strokeDasharray=L;rp.style.strokeDashoffset=L;
+let lastCity='';
+const mapScroll=()=>{const r=mapEl.getBoundingClientRect();const k=RM?1:Math.min(1,Math.max(0,(innerHeight*.85-r.top)/(r.height*1.1)));rp.style.strokeDashoffset=L*(1-k);const pt=rp.getPointAtLength(L*k);cart.setAttribute('x',pt.x-22);cart.setAttribute('y',pt.y+14);
+  const idx=k<.05?-1:k<.42?0:k<.72?1:k<.97?2:3;const c=idx<0?'':order[Math.min(3,idx+ (k>=.97?0:0))];
+  const reached=k>=.99?'bangkok':k>=.72?'hanoi':k>=.42?'beijing':k>=.02?'tashkent':'';if(reached&&reached!==lastCity){lastCity=reached;show(reached)}};
+addEventListener('scroll',()=>requestAnimationFrame(mapScroll),{passive:true});mapScroll();
+
+/* before / after */
+const ba=$('#ba'),rng=ba.querySelector('input');
+rng.addEventListener('input',()=>ba.style.setProperty('--pos',rng.value+'%'));
+const baIO=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!RM){let t0=performance.now();const f=t=>{const k=(t-t0)/2200;if(k>1){rng.value=50;ba.style.setProperty('--pos','50%');return}const v=50+Math.sin(k*Math.PI*2)*30;rng.value=v;ba.style.setProperty('--pos',v+'%');requestAnimationFrame(f)};requestAnimationFrame(f);baIO.disconnect()}},{threshold:.6});baIO.observe(ba);
+
+/* flip cards */
+$$('.flip').forEach(f=>f.addEventListener('click',()=>{f.classList.toggle('on');f.setAttribute('aria-pressed',f.classList.contains('on'))}));
+})();
+</script>
+</body>
+</html>
